@@ -1,18 +1,31 @@
-import React, {useEffect, useState} from 'react';
-import { startOscillator, setOscillatorGain } from '../libraries/webAudio2';
-import {Button, Slider} from '@material-ui/core';
+import React, {isValidElement, useEffect, useState} from 'react';
+import { startOscillator, setOscillatorGain, stopOscillator, setOscillatorFrequency, setOscillatorType } from '../libraries/webAudio2';
+import {Button, Slider, Select, MenuItem} from '@material-ui/core';
 
 const OscillatorControl = ({id, oscillatorNode}) => {
     console.log(id);
     const [gain, setGain] = useState(0);
+    const [frequency, setFrequency] = useState(Math.sqrt(261.625565300598634));
+    const [type, setType] = useState(oscillatorNode.oscillator.type);
     const [started, setStarted] = useState(false);
 
     useEffect(() => {
+        console.log('useffect', gain, oscillatorNode);
         setOscillatorGain(oscillatorNode, gain);
     }, [gain]);
+    useEffect(() => {
+        console.log('useffect freq', frequency, oscillatorNode);
+        setOscillatorFrequency(oscillatorNode, (frequency * frequency));
+    }, [frequency]);
+    useEffect(() => {
+        console.log('useffect', type, oscillatorNode);
+        setOscillatorType(oscillatorNode, type);
+    }, [type]);
+
+    const types = ['sine', 'square', 'sawtooth', 'triangle'];
 
     const handleStartOscillator = (e, id) => {
-        console.log('id', id);
+        console.log('id', id, started);
         if (started === false) {
             startOscillator(oscillatorNode);
             setGain(0.5);
@@ -23,7 +36,8 @@ const OscillatorControl = ({id, oscillatorNode}) => {
     }
 
     const handleStopOscillator = (e, index) => {
-        // stopOscillator(oscillator);
+        //stopOscillator(oscillatorNode);
+        console.log('handleStopOscillator');
         setGain(0);
     }
 
@@ -31,10 +45,30 @@ const OscillatorControl = ({id, oscillatorNode}) => {
         setGain(value);
     };
 
+    const handleFrequencyChange = name => (e, value) => {
+        setFrequency(value);
+    }
+
+    const handleTypeChange =  (event) => {
+        setType(event.target.value);
+    }
+
     return (<div key={id}>
-        <Button name={`gain_${id}`} value={id} onClick={(e) => handleStartOscillator(e, id)}>Start {id}</Button>
-        <Button name={`gain_${id}`} value={id} onClick={(e) => handleStopOscillator(e, id)}>Stop {id}</Button>
+        <Button name={`gain_${id}`} value={id} onClick={(e) => handleStartOscillator(e, id)}>Start</Button>
+        <Button name={`gain_${id}`} value={id} onClick={(e) => handleStopOscillator(e, id)}>Stop (mute)</Button>
+        <Select
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            value={type}
+            onChange={handleTypeChange}
+        >
+            {types.map(type => (
+                <MenuItem value={type}>{`${type}`}</MenuItem>
+            ))
+            }
+        </Select>
         <Slider name={`gain_${id}`} defaultValue={1} min={0} max={1} value={gain} step={0.0001}  onChange={handleGainChange(`gain_${id}`)} type="slider">Volume</Slider>
+        <Slider name={`frequency_${id}`} valueLabelDisplay="off" defaultValue={Math.sqrt(261.625565300598634)} min={0} max={Math.sqrt(13000)} value={frequency} step={0.00001}  onChange={handleFrequencyChange(`frequency_${id}`)} type="slider">Frequency</Slider>
             </div>)
     ;
 };

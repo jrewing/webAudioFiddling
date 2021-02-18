@@ -1,12 +1,25 @@
 
 
 const getOscillator = (id, gainNode, audioContext) => {
-    const oscNode = audioContext.createOscillator();
-    oscNode.type = "sine";
+    let oscNode = audioContext.createOscillator();
+    oscNode.type = 'sine';
     oscNode.frequency.value = 261.625565300598634; // middle C
     oscNode.connect(gainNode);
-    oscNode.id = +id;
+    // oscNode.id = +id;
     return oscNode;
+}
+
+const setOscillatorFrequency = (oscillatorNode, frequency) => {
+    console.log(frequency, +frequency);
+    oscillatorNode.oscillator.frequency.value = +frequency;
+}
+
+const setOscillatorType = (oscillatorNode, type) => {
+    console.log('setOscillatorType', type);
+    if (['sine', 'square', 'sawtooth', 'triangle', 'custom'].includes(type)) {
+        console.debug('yayayya');
+        oscillatorNode.oscillator.type = type;
+    }
 }
 
 const startOscillators = (oscillatorNodes) => {
@@ -16,6 +29,7 @@ const startOscillators = (oscillatorNodes) => {
 }
 
 const startOscillator = (oscillatorNode) => {
+    console.log('startOscillator', oscillatorNode);
     oscillatorNode.oscillator.start();
 }
 
@@ -26,6 +40,7 @@ const stopOscillators = (oscillatorNodes) => {
 }
 
 const stopOscillator = (oscillatorNode) => {
+    console.debug('stopOscilaltor');
     if (oscillatorNode) {
         oscillatorNode.oscillator.stop();
     }
@@ -33,9 +48,9 @@ const stopOscillator = (oscillatorNode) => {
 
 const setOscillatorGain = (oscillatorNode, level) => {
     if (oscillatorNode) {
-        console.log(level);
-        oscillatorNode.constantNode.offset.value = level;
+        console.log(level, oscillatorNode);
+        oscillatorNode.gainNode.gain.value = level;
     }
 }
 
-export {startOscillators, stopOscillators, startOscillator, stopOscillator, getOscillator, setOscillatorGain};
+export {startOscillators, stopOscillators, startOscillator, stopOscillator, getOscillator, setOscillatorGain, setOscillatorFrequency, setOscillatorType};
