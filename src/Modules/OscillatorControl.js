@@ -3,29 +3,24 @@ import { startOscillator, setOscillatorGain, stopOscillator, setOscillatorFreque
 import {Button, Slider, Select, MenuItem} from '@material-ui/core';
 
 const OscillatorControl = ({id, oscillatorNode}) => {
-    console.log(id);
     const [gain, setGain] = useState(0);
     const [frequency, setFrequency] = useState(Math.sqrt(261.625565300598634));
     const [type, setType] = useState(oscillatorNode.oscillator.type);
     const [started, setStarted] = useState(false);
 
     useEffect(() => {
-        console.log('useffect', gain, oscillatorNode);
         setOscillatorGain(oscillatorNode, gain);
     }, [gain]);
     useEffect(() => {
-        console.log('useffect freq', frequency, oscillatorNode);
         setOscillatorFrequency(oscillatorNode, (frequency * frequency));
     }, [frequency]);
     useEffect(() => {
-        console.log('useffect', type, oscillatorNode);
         setOscillatorType(oscillatorNode, type);
     }, [type]);
 
     const types = ['sine', 'square', 'sawtooth', 'triangle'];
 
     const handleStartOscillator = (e, id) => {
-        console.log('id', id, started);
         if (started === false) {
             startOscillator(oscillatorNode);
             setGain(0.5);
@@ -37,7 +32,6 @@ const OscillatorControl = ({id, oscillatorNode}) => {
 
     const handleStopOscillator = (e, index) => {
         //stopOscillator(oscillatorNode);
-        console.log('handleStopOscillator');
         setGain(0);
     }
 
