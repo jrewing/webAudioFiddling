@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Button, Input, MenuItem, Select} from '@material-ui/core';
+import {Button, InputLabel, MenuItem, Select, Switch, TextField} from '@material-ui/core';
 
 
 const Notes = ({notes}) => {
@@ -49,6 +49,10 @@ const Notes = ({notes}) => {
 
     const [distortions, setDistortions] = useState(initalDistortions);
     const [sustain, setSustain] = useState(9);
+    const [arpeggiatorFrequency, setArpeggiatorFrequency] = useState(4);
+    const [arpeggiatorOn, setArpeggiatorOn] = useState(false);
+    const [arpeggiatorReference, setArpeggiatorReference] = useState([]);
+
 
     const handleSetSustain = (d) => {
         setSustain(+d.target.value);
@@ -77,7 +81,7 @@ const Notes = ({notes}) => {
     const handleUpdateOn = (d) => {
         const newDistortions = distortions.map(dist => {
             if (dist.id === +d.target.name) {
-                return {...dist, on: d.target.value}
+                return {...dist, on: !dist.on}
             }
             return dist;
         });
@@ -85,6 +89,7 @@ const Notes = ({notes}) => {
     };
 
     const createNote = (note) => {
+        // console.log('create note', arpeggiatorReference);
         const gainNode = audioContext.createGain();
         gainNode.gain.value = 0.0001;
         gainNode.connect(audioContext.destination);
@@ -118,34 +123,93 @@ const Notes = ({notes}) => {
     }
 
     const stopNote = (note) => {
+        console.log('stop note', arpeggiatorReference);
+        arpeggiatorReference.forEach(arf => {
+            console.log('clear', arf);
+            clearInterval(arf);
+        });
+
         // const oscillatorNote = oscillatorNotes.find((on) => on.id === note.name);
         // oscillatorNote.gainNode.gain.value = 0;
         // oscillatorNote.gainNode.gain.setValueAtTime(0.001, audioContext.currentTime + 1);
     }
-    const handleKeyPress = (e) => {
-        const note = notes.find((n) => n.key === e.key);
-        if (note)
-        createNote(note);
+
+    const handleCreateNote = (note) => {
+            console.log(arpeggiatorOn, arpeggiatorFrequency);
+            if (arpeggiatorOn && arpeggiatorFrequency > 0) {
+                console.log('setarpeggiator');
+                const ref = window.setInterval(createNote, 250, note);
+                console.log(ref);
+                const newreferences = [...arpeggiatorReference, ref];
+                console.log(newreferences);
+                setArpeggiatorReference(newreferences);
+            } else {
+                createNote(note);
+            }
     }
 
+
     useEffect(() => {
+        const handleKeyPress = (e) => {
+            if (e.repeat) { return }
+            console.log('handle keypress');
+            const note = notes.find((n) => n.key === e.key);
+            if (note) {
+                handleCreateNote(note);
+            }
+        }
+
+        const handleKeyUp = (e) => {
+            console.log('handle keyup');
+            const note = notes.find((n) => n.key === e.key);
+            if (note) {
+                stopNote(note);
+            }
+        }
         window.addEventListener('keydown', handleKeyPress);
+        window.addEventListener('keyup', handleKeyUp);
         return () => {
             window.removeEventListener('keydown', handleKeyPress);
+            window.removeEventListener('keyup', handleKeyUp);
         };
-
-    }, [distortions]); // Empty array ensures that effect is only run on mount and unmount
+    }, []); // Empty array ensures that effect is only run on mount and unmount
 
     return (
     <div>
-        <Input name={'sustain'} id={'sustain'} value={sustain} onChange={handleSetSustain}></Input>
-        {distortions.map(distorter => (<>
-            <div>
-                <Input value={distorter.frequencyOffset} name={'Frequency offset'} id={distorter.id.toString()}
-                       onChange={handleUpdateDistortionFrequencyOffset}/>
-            </div>
-            <div>
+        <TextField
+            label="Sustain"
+            name={'sustain'}
+            id={'sustain'}
+            value={sustain}
+            onChange={handleSetSustain}
+            inputProps={{
+            step: 1,
+            min: 1,
+            max: 25,
+            type: 'number',
+        }}/>
+        <h2>Distortions</h2>
+
+        {distortions.map((distorter, index) => (<>
+            <>
+                <TextField
+                    label="Frequency offset"
+                    value={distorter.frequencyOffset}
+                    name={'Frequency offset'}
+                    id={distorter.id.toString()}
+                       onChange={handleUpdateDistortionFrequencyOffset}
+                    inputProps={{
+                        step: 0.5,
+                        min: -10,
+                        max: 10,
+                        type: 'number',
+                    }}
+                />
+            </>
+            <>
+                <InputLabel id={`wave-type-label-${index}`}>Wave type</InputLabel>
                 <Select
+                    labelId="wave-type-label"
                     id={distorter.id.toString()}
                     name={distorter.id.toString()}
                     value={distorter.type}
@@ -156,22 +220,19 @@ const Notes = ({notes}) => {
                     <MenuItem value={'triangle'}>Triangle</MenuItem>
                     <MenuItem value={'square'}>Square</MenuItem>
                 </Select>
-            </div>
+            </>
                 <div>
-                    <Select
-                        id={distorter.id.toString()}
-                        name={distorter.id.toString()}
-                        value={distorter.on}
+                    <Switch
+                        checked={distorter.on}
                         onChange={handleUpdateOn}
-                    >
-                        <MenuItem value={true}>On</MenuItem>
-                        <MenuItem value={false}>Off</MenuItem>
-                    </Select>
+                        name={distorter.id.toString()}
+                        inputProps={{ 'aria-label': 'secondary checkbox' }}
+                    />
                 </div>
             </>
             ))}
     {notes.map(note =>
-        <Button onMouseDown={() => createNote(note)} onMouseUp={() => stopNote(note)} onMouseLeave={() => stopNote(note)} name={note.name} value={note.name}>{note.name}</Button>
+        <Button variant="outlined" onMouseDown={() => handleCreateNote(note)} onMouseUp={() => stopNote(note)} onMouseLeave={() => stopNote(note)} name={note.name} value={note.name}>{note.name}</Button>
         )}
     </div>);
 };

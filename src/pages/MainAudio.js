@@ -1,6 +1,5 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import { getOscillator } from '../libraries/webAudio2';
-import {Button} from '@material-ui/core';
 import OscillatorControl from '../Modules/OscillatorControl';
 import Notes from '../Modules/Notes';
 
@@ -119,7 +118,7 @@ const MainAudio = (id) => {
   return <div>
           <h1>Synthetic</h1>
       {(oscillatorButtons.length > 0) && controllers}
-      <Notes notes={notes} />
+      <Notes key={'notes'} notes={notes} />
       {/* <Button onClick={addOscillator}>Legg til oscillator</Button> */}
       </div>
   ;

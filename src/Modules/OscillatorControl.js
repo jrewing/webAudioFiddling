@@ -1,4 +1,4 @@
-import React, {isValidElement, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { startOscillator, setOscillatorGain, stopOscillator, setOscillatorFrequency, setOscillatorType } from '../libraries/webAudio2';
 import {Button, Slider, Select, MenuItem} from '@material-ui/core';
 
@@ -10,13 +10,13 @@ const OscillatorControl = ({id, oscillatorNode}) => {
 
     useEffect(() => {
         setOscillatorGain(oscillatorNode, gain);
-    }, [gain]);
+    }, [gain, oscillatorNode]);
     useEffect(() => {
         setOscillatorFrequency(oscillatorNode, (frequency * frequency));
-    }, [frequency]);
+    }, [frequency, oscillatorNode]);
     useEffect(() => {
         setOscillatorType(oscillatorNode, type);
-    }, [type]);
+    }, [type, oscillatorNode]);
 
     const types = ['sine', 'square', 'sawtooth', 'triangle'];
 
