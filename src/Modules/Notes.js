@@ -50,11 +50,11 @@ const Notes = ({notes}) => {
         },
     ];
     const distortions = useState(initialDistortions);
-    const sustain = useState(3);
+    const sustain = useState(7);
 
 
     const arpeggiatorFrequency = useState(100);
-    const arpeggiatorOn = useState(true);
+    const arpeggiatorOn = useState(false);
     const arpeggiatorReference = useState([]);
 
     const handleUpdateArpeggiatorOn = () => {
@@ -62,8 +62,7 @@ const Notes = ({notes}) => {
     }
 
     const handleOctaveChange = (o,s) => {
-        console.log(o, s);
-//        setOctave(o);
+        octave.set(+o.target.value);
     }
 
     const handleSetSustain = (d) => {
@@ -111,7 +110,7 @@ const Notes = ({notes}) => {
             if(d.on === true) {
                 noiseOscillators.push(audioContext.createOscillator());
                 noiseOscillators[noiseOscillators.length -1].type = d.type;
-                noiseOscillators[noiseOscillators.length -1].frequency.value = note.frequency + d.frequencyOffset * Math.pow( octave.get(), 2);
+                noiseOscillators[noiseOscillators.length -1].frequency.value = note.frequency * Math.pow( octave.get(), 2) + d.frequencyOffset;
                 noiseOscillators[noiseOscillators.length -1].connect(gainNode);
                 noiseOscillators[noiseOscillators.length -1].start();
                 noiseOscillators[noiseOscillators.length -1].stop(audioContext.currentTime + sustain.get() + 1);
@@ -134,23 +133,12 @@ const Notes = ({notes}) => {
             console.log('clear', arf.get());
             clearInterval(arf.get());
         });
-
-        // const oscillatorNote = oscillatorNotes.find((on) => on.id === note.name);
-        // oscillatorNote.gainNode.gain.value = 0;
-        // oscillatorNote.gainNode.gain.setValueAtTime(0.001, audioContext.currentTime + 1);
     }
 
     const handleCreateNote = (note) => {
-            console.log(arpeggiatorOn.get(), arpeggiatorFrequency.get());
             if (arpeggiatorOn.get() && arpeggiatorFrequency.get() > 0) {
-                console.log('setarpeggiator');
                 createNote(note);
                 const ref = window.setInterval(createNote, arpeggiatorFrequency.get(), note);
-                console.log(ref);
-                /*
-                const newreferences = [...arpeggiatorReference, ref];
-                console.log(newreferences);
-                 */
                 arpeggiatorReference.merge([ref]);
             } else {
                 createNote(note);
@@ -160,16 +148,19 @@ const Notes = ({notes}) => {
 
     useEffect(() => {
         const handleKeyPress = (e) => {
+            let note = false;
             if (e.repeat) { return }
-            console.log('handle keypress');
-            const note = notes.find((n) => n.key === e.key);
+            if ([1,2,3,4,5,6,7,8,9,0].includes(+e.key)) {
+                note = notes.[e.key];
+            } else {
+                note = notes.find((n) => n.key === e.key);
+            }
             if (note) {
                 handleCreateNote(note);
             }
         }
 
         const handleKeyUp = (e) => {
-            console.log('handle keyup');
             const note = notes.find((n) => n.key === e.key);
             if (note) {
                 stopNote(note);
@@ -184,7 +175,17 @@ const Notes = ({notes}) => {
     }, []); // Empty array ensures that effect is only run on mount and unmount
 
     return (
-    <div>
+    <div id="wrapper" style={
+        {
+            display:'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gridTemplateRows: 'repeat(1, 1fr)',
+            gridGap: '10px',
+        }}>
+        <div style={{
+            gridColumn: '1 / 1',
+            gridRow: '1 / 1',
+        }}>
         <TextField
             label="Sustain"
             name={'sustain'}
@@ -197,9 +198,25 @@ const Notes = ({notes}) => {
             max: 25,
             type: 'number',
         }}/>
-        <h2>Distortions</h2>
-
-        {distortions.map((distorter, index) => (<>
+        </div>
+        <div style={{
+            gridColumn: '2 / 2',
+            gridRow: '1 / 1',
+            display:'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateRows: 'repeat(1, 1fr)',
+        }}>
+        <div style={{
+            gridColumn: 1 / 3,
+            gridRow: '1 / 1',
+        }}>
+            <h2>Distortions</h2>
+        </div>
+        {distortions.map((distorter, index) => (
+            <div style={{
+                gridColumn: `${index} / ${index}`,
+                gridRow: '2 / 2',
+            }}>
             <>
                 <TextField
                     label="Frequency offset"
@@ -238,10 +255,13 @@ const Notes = ({notes}) => {
                         inputProps={{ 'aria-label': 'secondary checkbox' }}
                     />
                 </div>
-            </>
+            </div>
             ))}
-
-        <div>
+        </div>
+        <div style={{
+            gridColumn: '3 / 3',
+            gridRow: '1 / 1',
+        }}>
             <InputLabel id={'areggiator-toggle'}>Arpeggiator</InputLabel>
             <Switch
                 labelId={'areggiator-toggle'}
@@ -263,30 +283,46 @@ const Notes = ({notes}) => {
                 }}
             />
         </div>
-
-        <Select
+        <div style={{
+            gridColumn: '4 / 4',
+            gridRow: '1 / 1',
+        }}>
+        <InputLabel id={'octaves'}>Octaves</InputLabel>
+        <TextField
             labelId="octaves"
             id="select-octaves"
             value={octave.get()}
             onChange={handleOctaveChange}
+            inputProps={{
+                step: 1,
+                min: 1,
+                max: 24,
+                type: 'number',
+            }}
         >
             <MenuItem value={0}>{0}</MenuItem>
             <MenuItem value={1}>{1}</MenuItem>
             <MenuItem value={2}>{2}</MenuItem>
             <MenuItem value={3}>{3}</MenuItem>
             <MenuItem value={4}>{4}</MenuItem>
-        </Select>
-
-    {notes.map(note =>
-        <Button
-            variant="outlined"
-            onMouseDown={() => handleCreateNote(note)}
-            onMouseUp={() => stopNote(note)}
-            onMouseLeave={() => stopNote(note)}
-            name={note.name}
-            value={note.name}>{note.name}
-        </Button>
+        </TextField>
+        </div>
+    <div id="notes" style={{
+        gridColumn: '1 / 5',
+        gridRow: '3 / 3',
+    }}>
+        {notes.map(note =>
+            <Button
+                variant="outlined"
+                onMouseDown={() => handleCreateNote(note)}
+                onMouseUp={() => stopNote(note)}
+                onMouseLeave={() => stopNote(note)}
+                name={note.name}
+                value={note.name}>{note.name}
+            </Button>
         )}
-    </div>);
+    </div>
+    </div>
+);
 };
 export default Notes;
