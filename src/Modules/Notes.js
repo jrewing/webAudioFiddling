@@ -4,6 +4,8 @@ import { useState } from '@hookstate/core';
 
 
 const Notes = ({notes}) => {
+    const octave = useState(4);
+
     const audioContext = new AudioContext();
     const oscillatorNotes = notes.map((note, index) => {
         console.log(note.name);
@@ -13,7 +15,6 @@ const Notes = ({notes}) => {
         I could not make this work.
         let constantNode = audioContext.createConstantSource();
         constantNode.connect(gainNode.gain);
-
         constantNode.start();
         */
         gainNode.connect(audioContext.destination);
@@ -51,12 +52,18 @@ const Notes = ({notes}) => {
     const distortions = useState(initialDistortions);
     const sustain = useState(3);
 
+
     const arpeggiatorFrequency = useState(100);
     const arpeggiatorOn = useState(true);
     const arpeggiatorReference = useState([]);
 
     const handleUpdateArpeggiatorOn = () => {
         arpeggiatorOn.set(!arpeggiatorOn.get());
+    }
+
+    const handleOctaveChange = (o,s) => {
+        console.log(o, s);
+//        setOctave(o);
     }
 
     const handleSetSustain = (d) => {
@@ -94,7 +101,7 @@ const Notes = ({notes}) => {
         gainNode.connect(audioContext.destination);
         const newOscillator = audioContext.createOscillator();
         newOscillator.type = 'sine';
-        newOscillator.frequency.value = note.frequency;
+        newOscillator.frequency.value = note.frequency * Math.pow( octave.get(), 2);
         newOscillator.connect(gainNode);
         newOscillator.start();
 
@@ -104,7 +111,7 @@ const Notes = ({notes}) => {
             if(d.on === true) {
                 noiseOscillators.push(audioContext.createOscillator());
                 noiseOscillators[noiseOscillators.length -1].type = d.type;
-                noiseOscillators[noiseOscillators.length -1].frequency.value = note.frequency + d.frequencyOffset;
+                noiseOscillators[noiseOscillators.length -1].frequency.value = note.frequency + d.frequencyOffset * Math.pow( octave.get(), 2);
                 noiseOscillators[noiseOscillators.length -1].connect(gainNode);
                 noiseOscillators[noiseOscillators.length -1].start();
                 noiseOscillators[noiseOscillators.length -1].stop(audioContext.currentTime + sustain.get() + 1);
@@ -233,6 +240,7 @@ const Notes = ({notes}) => {
                 </div>
             </>
             ))}
+
         <div>
             <InputLabel id={'areggiator-toggle'}>Arpeggiator</InputLabel>
             <Switch
@@ -255,6 +263,20 @@ const Notes = ({notes}) => {
                 }}
             />
         </div>
+
+        <Select
+            labelId="octaves"
+            id="select-octaves"
+            value={octave.get()}
+            onChange={handleOctaveChange}
+        >
+            <MenuItem value={0}>{0}</MenuItem>
+            <MenuItem value={1}>{1}</MenuItem>
+            <MenuItem value={2}>{2}</MenuItem>
+            <MenuItem value={3}>{3}</MenuItem>
+            <MenuItem value={4}>{4}</MenuItem>
+        </Select>
+
     {notes.map(note =>
         <Button
             variant="outlined"

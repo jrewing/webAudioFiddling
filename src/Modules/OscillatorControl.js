@@ -51,8 +51,8 @@ const OscillatorControl = ({id, oscillatorNode}) => {
         <Button name={`gain_${id}`} value={id} onClick={(e) => handleStartOscillator(e, id)}>Start</Button>
         <Button name={`gain_${id}`} value={id} onClick={(e) => handleStopOscillator(e, id)}>Stop (mute)</Button>
         <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
+            labelId="`wave_type_${id}`"
+            id="`wave_type_${id}`"
             value={type}
             onChange={handleTypeChange}
         >

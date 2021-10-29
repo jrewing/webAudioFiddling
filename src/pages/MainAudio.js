@@ -6,71 +6,72 @@ import Notes from '../Modules/Notes';
 
 const notes = [
     {
-        frequency: 261.63,
-        name: 'C4',
+        frequency: 16.35,
+        name: 'C',
         key: 'c',
     },
     {
-        frequency: 277.18,
-        name: 'C#4',
+        frequency: 17.32,
+        name: 'C#',
         key: 'C',
     },
     {
-        frequency: 293.66,
-        name: 'D4',
+        frequency: 18.35,
+        name: 'D',
         key: 'd',
     },
     {
-        frequency: 311.13,
-        name: 'D#4',
+        frequency: 19.45,
+        name: 'D#',
         key: 'D',
     },
     {
-        frequency: 329.63,
-        name: 'E4',
+        frequency: 20.60,
+        name: 'E',
         key: 'e',
     },
     {
-        frequency: 349.23,
-        name: 'F4',
+        frequency: 21.83,
+        name: 'F',
         key: 'f',
     },
     {
-        frequency: 369.99,
-        name: 'F#4',
+        frequency: 23.12,
+        name: 'F#',
         key: 'F',
     },
     {
-        frequency: 392.00,
-        name: 'G4',
+        frequency: 24.50,
+        name: 'G',
         key: 'g',
     },
     {
-        frequency: 415.30,
-        name: 'G#4',
+        frequency: 25.96,
+        name: 'G#',
         key: 'G',
     },
     {
-        frequency: 440.00,
-        name: 'A4',
+        frequency: 27.5,
+        name: 'A',
         key: 'a',
     },
     {
-        frequency: 466.16,
-        name: 'A#4',
+        frequency: 29.14,
+        name: 'A#',
         key: 'A',
     },
     {
-        frequency: 493.88,
-        name: 'B4',
+        frequency: 30.87,
+        name: 'B',
         key: 'b',
     },
     {
-        frequency: 523.25,
-        name: 'C5',
+        frequency: 32.70,
+        name: 'C',
         key: 'ç',
     },
-]
+];
+
 const oscillatorButtons = [0,1,2];
 
 const globalState = createState({notes, oscillatorButtons});
@@ -79,7 +80,6 @@ const MainAudio = (id) => {
     const audioContext = new AudioContext();
     const state = useState(globalState);
     //const [oscillators, setOscillators] = useState([]);
-    //const [oscillatorButtons, setOscillatorButtons] = useState();
 
     const initialOscillators = state.oscillatorButtons.get().map((os) => {
             let gainNode = audioContext.createGain();
@@ -120,7 +120,7 @@ const MainAudio = (id) => {
   return <div>
           <h1>Synthetic</h1>
       {(oscillatorButtons.length > 0) && controllers}
-      <Notes key={'notes'} notes={state.notes.get()} />
+      <Notes key={'notes'} notes={state.notes.get()}  />
       {/* <Button onClick={addOscillator}>Legg til oscillator</Button> */}
       </div>
   ;
