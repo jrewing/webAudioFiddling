@@ -1,10 +1,12 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {Button, InputLabel, MenuItem, Select, Switch, TextField} from '@material-ui/core';
+import { useState } from '@hookstate/core';
 
 
 const Notes = ({notes}) => {
     const audioContext = new AudioContext();
     const oscillatorNotes = notes.map((note, index) => {
+        console.log(note.name);
         let gainNode = audioContext.createGain();
         gainNode.gain.value = 0;
         /*
@@ -23,7 +25,7 @@ const Notes = ({notes}) => {
         return { oscillator: newOscillator, gainNode, id: note.name };
     });
 
-    const initalDistortions = [
+    const initialDistortions = [
         {
             id: 0,
             frequencyOffset: 1,
@@ -46,50 +48,47 @@ const Notes = ({notes}) => {
             type: 'square',
         },
     ];
+    const distortions = useState(initialDistortions);
+    const sustain = useState(3);
 
-    const [distortions, setDistortions] = useState(initalDistortions);
-    const [sustain, setSustain] = useState(9);
-    const [arpeggiatorFrequency, setArpeggiatorFrequency] = useState(4);
-    const [arpeggiatorOn, setArpeggiatorOn] = useState(false);
-    const [arpeggiatorReference, setArpeggiatorReference] = useState([]);
+    const arpeggiatorFrequency = useState(100);
+    const arpeggiatorOn = useState(true);
+    const arpeggiatorReference = useState([]);
 
+    const handleUpdateArpeggiatorOn = () => {
+        arpeggiatorOn.set(!arpeggiatorOn.get());
+    }
 
     const handleSetSustain = (d) => {
-        setSustain(+d.target.value);
+        sustain.set(+d.target.value);
+    }
+
+    const handleUpdateArpeggiatorFrequency = (d) => {
+        arpeggiatorFrequency.set(+d.target.value);
     }
 
     const handleUpdateDistortionFrequencyOffset = (d) => {
-        const newDistortions = distortions.map(dist => {
-            if (dist.id === +d.target.id) {
-                return {...dist, frequencyOffset: +d.target.value}
-            }
-            return dist;
-        });
-        setDistortions(newDistortions);
+        distortions.find(dist => dist.get().id === +d.target.id && (dist.merge(ds => ({frequencyOffset: +d.target.value})), true));
     };
 
     const handleUpdateType = (d) => {
         const newDistortions = distortions.map(dist => {
-            if (dist.id === +d.target.name) {
-                return {...dist, type: d.target.value}
+            if (dist.get().id === +d.target.name) {
+                dist.merge(ds => ({type: d.target.value}));
             }
-            return dist;
         });
-        setDistortions(newDistortions);
     };
 
     const handleUpdateOn = (d) => {
         const newDistortions = distortions.map(dist => {
-            if (dist.id === +d.target.name) {
-                return {...dist, on: !dist.on}
+            if (dist.get().id === +d.target.name) {
+                dist.merge(s => ({on: !s.on}));
             }
-            return dist;
         });
-        setDistortions(newDistortions);
     };
 
     const createNote = (note) => {
-        // console.log('create note', arpeggiatorReference);
+        console.log('create note', note, distortions.get());
         const gainNode = audioContext.createGain();
         gainNode.gain.value = 0.0001;
         gainNode.connect(audioContext.destination);
@@ -100,7 +99,7 @@ const Notes = ({notes}) => {
         newOscillator.start();
 
         // add some noise
-        distortions.forEach((d, index) => {
+        distortions.get().forEach((d, index) => {
             const noiseOscillators = [];
             if(d.on === true) {
                 noiseOscillators.push(audioContext.createOscillator());
@@ -108,12 +107,12 @@ const Notes = ({notes}) => {
                 noiseOscillators[noiseOscillators.length -1].frequency.value = note.frequency + d.frequencyOffset;
                 noiseOscillators[noiseOscillators.length -1].connect(gainNode);
                 noiseOscillators[noiseOscillators.length -1].start();
-                noiseOscillators[noiseOscillators.length -1].stop(audioContext.currentTime + sustain + 1);
+                noiseOscillators[noiseOscillators.length -1].stop(audioContext.currentTime + sustain.get() + 1);
             }
         });
         gainNode.gain.exponentialRampToValueAtTime(0.4, audioContext.currentTime );
-        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + sustain);
-        newOscillator.stop(audioContext.currentTime + sustain + 1);
+        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + sustain.get());
+        newOscillator.stop(audioContext.currentTime + sustain.get() + 1);
     }
 
     const startNote = (note) => {
@@ -125,8 +124,8 @@ const Notes = ({notes}) => {
     const stopNote = (note) => {
         console.log('stop note', arpeggiatorReference);
         arpeggiatorReference.forEach(arf => {
-            console.log('clear', arf);
-            clearInterval(arf);
+            console.log('clear', arf.get());
+            clearInterval(arf.get());
         });
 
         // const oscillatorNote = oscillatorNotes.find((on) => on.id === note.name);
@@ -135,14 +134,17 @@ const Notes = ({notes}) => {
     }
 
     const handleCreateNote = (note) => {
-            console.log(arpeggiatorOn, arpeggiatorFrequency);
-            if (arpeggiatorOn && arpeggiatorFrequency > 0) {
+            console.log(arpeggiatorOn.get(), arpeggiatorFrequency.get());
+            if (arpeggiatorOn.get() && arpeggiatorFrequency.get() > 0) {
                 console.log('setarpeggiator');
-                const ref = window.setInterval(createNote, 250, note);
+                createNote(note);
+                const ref = window.setInterval(createNote, arpeggiatorFrequency.get(), note);
                 console.log(ref);
+                /*
                 const newreferences = [...arpeggiatorReference, ref];
                 console.log(newreferences);
-                setArpeggiatorReference(newreferences);
+                 */
+                arpeggiatorReference.merge([ref]);
             } else {
                 createNote(note);
             }
@@ -180,7 +182,7 @@ const Notes = ({notes}) => {
             label="Sustain"
             name={'sustain'}
             id={'sustain'}
-            value={sustain}
+            value={sustain.get()}
             onChange={handleSetSustain}
             inputProps={{
             step: 1,
@@ -194,9 +196,9 @@ const Notes = ({notes}) => {
             <>
                 <TextField
                     label="Frequency offset"
-                    value={distorter.frequencyOffset}
+                    value={distorter.get().frequencyOffset}
                     name={'Frequency offset'}
-                    id={distorter.id.toString()}
+                    id={distorter.get().id.toString()}
                        onChange={handleUpdateDistortionFrequencyOffset}
                     inputProps={{
                         step: 0.5,
@@ -210,9 +212,9 @@ const Notes = ({notes}) => {
                 <InputLabel id={`wave-type-label-${index}`}>Wave type</InputLabel>
                 <Select
                     labelId="wave-type-label"
-                    id={distorter.id.toString()}
-                    name={distorter.id.toString()}
-                    value={distorter.type}
+                    id={distorter.get().id.toString()}
+                    name={distorter.get().id.toString()}
+                    value={distorter.get().type}
                     onChange={handleUpdateType}
                 >
                     <MenuItem value={'sine'}>Sine</MenuItem>
@@ -223,16 +225,45 @@ const Notes = ({notes}) => {
             </>
                 <div>
                     <Switch
-                        checked={distorter.on}
+                        checked={distorter.get().on}
                         onChange={handleUpdateOn}
-                        name={distorter.id.toString()}
+                        name={distorter.get().id.toString()}
                         inputProps={{ 'aria-label': 'secondary checkbox' }}
                     />
                 </div>
             </>
             ))}
+        <div>
+            <InputLabel id={'areggiator-toggle'}>Arpeggiator</InputLabel>
+            <Switch
+                labelId={'areggiator-toggle'}
+                checked={arpeggiatorOn.get()}
+                onChange={handleUpdateArpeggiatorOn}
+                inputProps={{ 'aria-label': 'secondary checkbox' }}
+            />
+            <TextField
+                label="Arpeggiator frequency"
+                value={arpeggiatorFrequency.get()}
+                name={'Frequency offset'}
+                id={'arpeggiatorFrequency-input'}
+                onChange={handleUpdateArpeggiatorFrequency}
+                inputProps={{
+                    step: 10,
+                    min: 100,
+                    max: 5000,
+                    type: 'number',
+                }}
+            />
+        </div>
     {notes.map(note =>
-        <Button variant="outlined" onMouseDown={() => handleCreateNote(note)} onMouseUp={() => stopNote(note)} onMouseLeave={() => stopNote(note)} name={note.name} value={note.name}>{note.name}</Button>
+        <Button
+            variant="outlined"
+            onMouseDown={() => handleCreateNote(note)}
+            onMouseUp={() => stopNote(note)}
+            onMouseLeave={() => stopNote(note)}
+            name={note.name}
+            value={note.name}>{note.name}
+        </Button>
         )}
     </div>);
 };
