@@ -100,7 +100,8 @@ const Notes = ({notes}) => {
         gainNode.connect(audioContext.destination);
         const newOscillator = audioContext.createOscillator();
         newOscillator.type = 'sine';
-        newOscillator.frequency.value = note.frequency * Math.pow( octave.get(), 2);
+        newOscillator.frequency.value = note.frequency * Math.pow( 2, octave.get());
+        console.log(note.frequency, octave.get(), note.frequency * Math.pow(  2, octave.get()));
         newOscillator.connect(gainNode);
         newOscillator.start();
 
@@ -151,7 +152,7 @@ const Notes = ({notes}) => {
             let note = false;
             if (e.repeat) { return }
             if ([1,2,3,4,5,6,7,8,9,0].includes(+e.key)) {
-                note = notes.[e.key];
+                note = notes[+e.key];
             } else {
                 note = notes.find((n) => n.key === e.key);
             }
