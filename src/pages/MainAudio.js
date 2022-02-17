@@ -3,6 +3,9 @@ import { createState, useState } from '@hookstate/core';
 import { getOscillator } from '../libraries/webAudio2';
 import OscillatorControl from '../Modules/OscillatorControl';
 import Notes from '../Modules/Notes';
+import Drums from '../Modules/Drums';
+
+
 
 const notes = [
     {
@@ -122,6 +125,7 @@ const MainAudio = (id) => {
       {(oscillatorButtons.length > 0) && controllers}
       <Notes key={'notes'} notes={state.notes.get()}  />
       {/* <Button onClick={addOscillator}>Legg til oscillator</Button> */}
+      <Drums></Drums>
       </div>
   ;
 };

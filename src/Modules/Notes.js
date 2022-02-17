@@ -7,6 +7,38 @@ const Notes = ({notes}) => {
     const octave = useState(4);
 
     const audioContext = new AudioContext();
+    /*
+    var convolver = audioContext.createConvolver();
+    // Create an empty three-second stereo buffer at the sample rate of the AudioContext
+    var myArrayBuffer = audioContext.createBuffer(2, audioContext.sampleRate * 3, audioContext.sampleRate);
+    // Fill the buffer with white noise;
+    // just random values between -1.0 and 1.0
+    for (var channel = 0; channel < myArrayBuffer.numberOfChannels; channel++) {
+        // This gives us the actual ArrayBuffer that contains the data
+        var nowBuffering = myArrayBuffer.getChannelData(channel);
+        for (var i = 0; i < myArrayBuffer.length; i++) {
+            // Math.random() is in [0; 1.0]
+            // audio needs to be in [-1.0; 1.0]
+            nowBuffering[i] = Math.random() * 2 - 1;
+        }
+    }
+
+    // Get an AudioBufferSourceNode.
+    // This is the AudioNode to use when we want to play an AudioBuffer
+    var source = audioContext.createBufferSource();
+    // set the buffer in the AudioBufferSourceNode
+    //source.buffer = myArrayBuffer;
+    convolver.buffer = myArrayBuffer;
+
+    // connect the AudioBufferSourceNode to the
+    // destination so we can hear the sound
+    source.connect(convolver);
+    //source.connect(audioCtx.destination);
+    convolver.connect(audioContext.destination);
+    // start the source playing
+    // source.start();
+
+     */
     const oscillatorNotes = notes.map((note, index) => {
         console.log(note.name);
         let gainNode = audioContext.createGain();
@@ -22,7 +54,8 @@ const Notes = ({notes}) => {
         newOscillator.type = 'sine';
         newOscillator.frequency.value = note.frequency;
         newOscillator.connect(gainNode);
-        newOscillator.start();
+        // newOscillator.connect(convolver);
+        // newOscillator.start();
         return { oscillator: newOscillator, gainNode, id: note.name };
     });
 
@@ -103,6 +136,7 @@ const Notes = ({notes}) => {
         newOscillator.frequency.value = note.frequency * Math.pow( 2, octave.get());
         console.log(note.frequency, octave.get(), note.frequency * Math.pow(  2, octave.get()));
         newOscillator.connect(gainNode);
+        //newOscillator.connect(convolver);
         newOscillator.start();
 
         // add some noise
