@@ -183,9 +183,11 @@ const Notes = ({notes}) => {
 
     useEffect(() => {
         const handleKeyPress = (e) => {
+            console.log('NOTES Keypress', e.key);
             let note = false;
             if (e.repeat) { return }
-            if ([1,2,3,4,5,6,7,8,9,0].includes(+e.key)) {
+            if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key)) {
+                console.log('space equals 0?');
                 note = notes[+e.key];
             } else {
                 note = notes.find((n) => n.key === e.key);
@@ -216,10 +218,12 @@ const Notes = ({notes}) => {
             gridTemplateColumns: 'repeat(4, 1fr)',
             gridTemplateRows: 'repeat(1, 1fr)',
             gridGap: '10px',
+            border: '1px solid red',
         }}>
         <div style={{
             gridColumn: '1 / 1',
             gridRow: '1 / 1',
+            border: '1px solid aqua',
         }}>
         <TextField
             label="Sustain"
@@ -240,6 +244,7 @@ const Notes = ({notes}) => {
             display:'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gridTemplateRows: 'repeat(1, 1fr)',
+            border: '1px sold blue',
         }}>
         <div style={{
             gridColumn: 1 / 3,

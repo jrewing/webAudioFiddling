@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { startOscillator, setOscillatorGain, stopOscillator, setOscillatorFrequency, setOscillatorType } from '../libraries/webAudio2';
-import {Button, Slider, Select, MenuItem} from '@material-ui/core';
+import {Button, Slider, Select, MenuItem, Typography} from '@material-ui/core';
 
 const OscillatorControl = ({id, oscillatorNode}) => {
     const [gain, setGain] = useState(0);
@@ -61,8 +61,33 @@ const OscillatorControl = ({id, oscillatorNode}) => {
             ))
             }
         </Select>
-        <Slider name={`gain_${id}`} defaultValue={1} min={0} max={1} value={gain} step={0.0001}  onChange={handleGainChange(`gain_${id}`)} type="slider">Volume</Slider>
-        <Slider name={`frequency_${id}`} valueLabelDisplay="off" defaultValue={Math.sqrt(261.625565300598634)} min={0} max={Math.sqrt(13000)} value={frequency} step={0.00001}  onChange={handleFrequencyChange(`frequency_${id}`)} type="slider">Frequency</Slider>
+        <Typography id={'label-gain'}>Gain</Typography>
+        <Slider
+            aria-labelledby={'label-gain'}
+            name={`gain_${id}`}
+            defaultValue={1}
+            min={0}
+            max={1}
+            value={gain}
+            step={0.0001}
+            onChange={handleGainChange(`gain_${id}`)}
+            type="slider"
+            valueLabelDisplay='0n'
+        >Volume
+        </Slider>
+        <Typography id={'label-frequency'}>Frequency</Typography>
+        <Slider
+            aria-labelledby={'label-frequency'}
+            name={`frequency_${id}`}
+            valueLabelDisplay="off"
+            defaultValue={Math.sqrt(261.625565300598634)}
+            min={0}
+            max={Math.sqrt(13000)}
+            value={frequency}
+            step={0.001}
+            onChange={handleFrequencyChange(`frequency_${id}`)}
+            type="slider"
+            valueLabelDisplay='0n'>Frequency</Slider>
             </div>)
     ;
 };

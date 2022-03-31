@@ -1,6 +1,6 @@
-import React, {useEffect} from 'react';
-import {useState} from '@hookstate/core';
-import {Button, InputLabel, MenuItem, Select, Switch, TextField} from '@material-ui/core';
+import React, {useEffect, useState} from 'react';
+import {useState as useStoredState} from '@hookstate/core';
+import {Button, InputLabel, Slider, Switch, TextField, Typography} from '@material-ui/core';
 
 const Drum = ({drum}) => {
 
@@ -38,31 +38,10 @@ const Drum = ({drum}) => {
         source.start();
 
     // };
-    const octave = useState(4);
+    const octave = useStoredState(4);
 
-    const initialDistortions = [
-        {
-            id: 0,
-            frequencyOffset: 100,
-            on: false,
-            gainOffset: 0,
-            type: 'square',
-        },
-        {
-            id: 1,
-            frequencyOffset: -100,
-            on: false,
-            gainOffset: 0,
-            type: 'square',
-        },
-        {
-            id: 2,
-            frequencyOffset: 50,
-            on: false,
-            gainOffset: 0,
-            type: 'square',
-        },
-    ];
+    const [drumOffset, setDrumOffset] = useState(200);
+    const [drumScale, setDrumScale] = useState(1000);
 
     const getDistortions = () => {
         const numberOfDistortions = 128;
@@ -70,7 +49,7 @@ const Drum = ({drum}) => {
         for (let i = 0; i < numberOfDistortions; i++) {
             dists.push({
                 id: i,
-                frequencyOffset: Math.floor(Math.random() * 200),
+                frequencyOffset: Math.floor(Math.random() * drumScale) + drumOffset,
                 gainOffset: 0,
                 type: 'square',
             })
@@ -78,15 +57,22 @@ const Drum = ({drum}) => {
 
         return dists;
     }
-    const distortions = useState(initialDistortions);
-    const predefinedDistortions = useState(getDistortions());
-    const sustain = useState(1);
-    const reverbOn = useState(false);
+
+    const sustain = useStoredState(1);
+    const reverbOn = useStoredState(false);
 
 
-    const arpeggiatorFrequency = useState(100);
-    const arpeggiatorOn = useState(false);
-    const arpeggiatorReference = useState([]);
+    const arpeggiatorFrequency = useStoredState(100);
+    const arpeggiatorOn = useStoredState(false);
+    const arpeggiatorReference = useStoredState([]);
+
+    const handleOffsetChange = (o,v) => {
+        setDrumOffset(v);
+    }
+
+    const handleScaleChange = (o,v) => {
+        setDrumScale(v);
+    }
 
     const handleToggleReverb = () => {
         reverbOn.set(!reverbOn.get());
@@ -108,28 +94,7 @@ const Drum = ({drum}) => {
         arpeggiatorFrequency.set(+d.target.value);
     }
 
-    const handleUpdateDistortionFrequencyOffset = (d) => {
-        distortions.find(dist => dist.get().id === +d.target.id && (dist.merge(ds => ({frequencyOffset: +d.target.value})), true));
-    };
-
-    const handleUpdateType = (d) => {
-        const newDistortions = distortions.map(dist => {
-            if (dist.get().id === +d.target.name) {
-                dist.merge(ds => ({type: d.target.value}));
-            }
-        });
-    };
-
-    const handleUpdateOn = (d) => {
-        const newDistortions = distortions.map(dist => {
-            if (dist.get().id === +d.target.name) {
-                dist.merge(s => ({on: !s.on}));
-            }
-        });
-    };
-
     const createDrum = (drum) => {
-        console.log('create drum xxx', drum, distortions.get());
         const gainNode = audioContext.createGain();
         gainNode.gain.value = 0.0001;
         gainNode.connect(audioContext.destination);
@@ -144,19 +109,8 @@ const Drum = ({drum}) => {
         newOscillator.start();
 
         // add some noise
-        distortions.get().forEach((d, index) => {
-            const noiseOscillators = [];
-            if(d.on === true) {
-                noiseOscillators.push(audioContext.createOscillator());
-                noiseOscillators[noiseOscillators.length -1].type = d.type;
-                noiseOscillators[noiseOscillators.length -1].frequency.value = drum.frequency * Math.pow( octave.get(), 2) + d.frequencyOffset;
-                noiseOscillators[noiseOscillators.length -1].connect(gainNode);
-                noiseOscillators[noiseOscillators.length -1].start();
-                noiseOscillators[noiseOscillators.length -1].stop(audioContext.currentTime + sustain.get() + 1);
-            }
-        });
-        // add some noise
-        predefinedDistortions.get().forEach((d, index) => {
+        getDistortions(drum).forEach((d, index) => {
+            console.log(d);
             const noiseOscillators = [];
                 noiseOscillators.push(audioContext.createOscillator());
                 noiseOscillators[noiseOscillators.length -1].type = d.type;
@@ -190,13 +144,13 @@ const Drum = ({drum}) => {
 
     useEffect(() => {
         const handleKeyPress = (e) => {
-            if (drum) {
+            console.log(e.key);
+            if (drum && e.key === ' ') {
                 handleCreateDrum(drum);
             }
         }
-
         const handleKeyUp = (e) => {
-            if (drum) {
+            if (drum && e.key === ' ') {
                 stopDrum(drum);
             }
         }
@@ -206,7 +160,7 @@ const Drum = ({drum}) => {
             window.removeEventListener('keydown', handleKeyPress);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, []); // Empty array ensures that effect is only run on mount and unmount
+    }, [handleCreateDrum, stopDrum, drum]); // Empty array ensures that effect is only run on mount and unmount
 
     return (
         <div id="wrapper" style={
@@ -232,65 +186,6 @@ const Drum = ({drum}) => {
                         max: 25,
                         type: 'number',
                     }}/>
-            </div>
-            <div style={{
-                gridColumn: '2 / 2',
-                gridRow: '1 / 1',
-                display:'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gridTemplateRows: 'repeat(1, 1fr)',
-            }}>
-                <div style={{
-                    gridColumn: 1 / 3,
-                    gridRow: '1 / 1',
-                }}>
-                    <h2>Distortions</h2>
-                </div>
-                {distortions.map((distorter, index) => (
-                    <div key={`drumdist_${index}`} style={{
-                        gridColumn: `${index} / ${index}`,
-                        gridRow: '2 / 2',
-                    }}>
-                        <>
-                            <TextField
-                                label="Frequency offset"
-                                value={distorter.get().frequencyOffset}
-                                name={'Frequency offset'}
-                                id={distorter.get().id.toString()}
-                                onChange={handleUpdateDistortionFrequencyOffset}
-                                inputProps={{
-                                    step: 2,
-                                    min: -1000,
-                                    max: 1000,
-                                    type: 'number',
-                                }}
-                            />
-                        </>
-                        <>
-                            <InputLabel id={`wave-type-label-${index}`}>Wave type</InputLabel>
-                            <Select
-                                labelId="wave-type-label"
-                                id={distorter.get().id.toString()}
-                                name={distorter.get().id.toString()}
-                                value={distorter.get().type}
-                                onChange={handleUpdateType}
-                            >
-                                <MenuItem value={'sine'}>Sine</MenuItem>
-                                <MenuItem value={'sawtooth'}>Sawtooth</MenuItem>
-                                <MenuItem value={'triangle'}>Triangle</MenuItem>
-                                <MenuItem value={'square'}>Square</MenuItem>
-                            </Select>
-                        </>
-                        <div>
-                            <Switch
-                                checked={distorter.get().on}
-                                onChange={handleUpdateOn}
-                                name={distorter.get().id.toString()}
-                                inputProps={{ 'aria-label': 'secondary checkbox' }}
-                            />
-                        </div>
-                    </div>
-                ))}
             </div>
             <div style={{
                 gridColumn: '3 / 3',
@@ -329,7 +224,43 @@ const Drum = ({drum}) => {
                 gridColumn: '1 / 5',
                 gridRow: '3 / 3',
             }}>
-                    <Button
+                <Typography id={'drum-offset'}>
+                    Drum offset
+                </Typography>
+                <Slider
+                    aria-label={'Offset'}
+                    name={`drum-offset`}
+                        defaultValue={50} m
+                        in={0}
+                        max={1000}
+                        value={drumOffset}
+                        step={1}
+                        onChange={handleOffsetChange}
+                        type="slider"
+                        valueLabelDisplay='0n'
+                >
+                    Offset
+                </Slider>
+                <Typography id={'drum-scale'}>
+                    Drum scale
+                </Typography>
+                <Slider
+                    aria-labelledby="drum-scale"
+                    aria-label={'Scale'}
+                    name={`drum-scale`}
+                        defaultValue={50}
+                        min={0}
+                        max={1000}
+                        value={drumScale}
+                        step={1}
+                        onChange={handleScaleChange}
+                        type="slider"
+                        valueLabelDisplay='0n'
+                    >
+                    Offset
+                </Slider>
+
+                <Button
                         variant="outlined"
                         onMouseDown={() => handleCreateDrum(drum)}
                         onMouseUp={() => stopDrum(drum)}
@@ -337,19 +268,6 @@ const Drum = ({drum}) => {
                         name={drum.name}
                         value={drum.name}>{drum.name}
                     </Button>
-
-            </div>
-            <div id="drum2" style={{
-                gridColumn: '2 / 5',
-                gridRow: '3 / 3',
-            }}>
-                <Button
-                    variant="outlined"
-                    // onClick={() => handleStartWhiteNoise()}
-                    name={drum.name}
-                    value={drum.name}>{drum.name}
-                </Button>
-
             </div>
         </div>)
 };
