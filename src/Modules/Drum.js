@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {useState as useStoredState} from '@hookstate/core';
-import {Button, InputLabel, Slider, Switch, TextField, Typography} from '@material-ui/core';
+import {hookstate as useStoredState} from '@hookstate/core';
+import {Button, InputLabel, Slider, Switch, TextField, Typography} from '@mui/material';
 
 const Drum = ({drum}) => {
 

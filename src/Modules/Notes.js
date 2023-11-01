@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
-import {Button, InputLabel, MenuItem, Select, Switch, TextField} from '@material-ui/core';
-import { useState } from '@hookstate/core';
+import {Button, InputLabel, MenuItem, Select, Switch, TextField} from '@mui/material';
+import { hookstate as useState } from '@hookstate/core';
 
 
 const Notes = ({notes}) => {

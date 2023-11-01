@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { startOscillator, setOscillatorGain, stopOscillator, setOscillatorFrequency, setOscillatorType } from '../libraries/webAudio2';
-import {Button, Slider, Select, MenuItem, Typography} from '@material-ui/core';
+import {Button, Slider, Select, MenuItem, Typography} from '@mui/material';
 
 const OscillatorControl = ({id, oscillatorNode}) => {
     const [gain, setGain] = useState(0);

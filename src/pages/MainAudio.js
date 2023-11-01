@@ -1,5 +1,5 @@
 import React from 'react';
-import { createState, useState } from '@hookstate/core';
+import { hookstate as createState, useHookstate as useState } from '@hookstate/core';
 import { getOscillator } from '../libraries/webAudio2';
 import OscillatorControl from '../Modules/OscillatorControl';
 import Notes from '../Modules/Notes';
