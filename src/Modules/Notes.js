@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import {Button, InputLabel, MenuItem, Select, Switch, TextField} from '@mui/material';
-import { hookstate as useState } from '@hookstate/core';
+import { useHookstate as useState } from '@hookstate/core';
 
 
 const Notes = ({notes}) => {
@@ -120,7 +120,9 @@ const Notes = ({notes}) => {
 
     const handleUpdateOn = (d) => {
         const newDistortions = distortions.map(dist => {
+            console.log(dist.get().id, +d.target.name);
             if (dist.get().id === +d.target.name) {
+                console.log('found trying to set on', dist.get().on, 'to', !dist.get().on, 'for', dist.get().id);
                 dist.merge(s => ({on: !s.on}));
             }
         });

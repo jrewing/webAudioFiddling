@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {hookstate as useStoredState} from '@hookstate/core';
+import {useHookstate as useStoredState} from '@hookstate/core';
 import {Button, InputLabel, Slider, Switch, TextField, Typography} from '@mui/material';
 
 const Drum = ({drum}) => {
